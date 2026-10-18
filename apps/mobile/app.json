@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "VSecure HRMS",
+    "slug": "vsecure-hrms",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFFFF",
+    "primaryColor": "#2563EB",
+    "splash": {
+      "backgroundColor": "#FFFFFF",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vsecuretechnologies.hrms",
+      "userInterfaceStyle": "light"
+    },
+    "android": {
+      "package": "com.vsecuretechnologies.hrms",
+      "backgroundColor": "#FFFFFF",
+      "userInterfaceStyle": "light",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow VSecure HRMS to verify your office GPS location for attendance check-in."
+        }
+      ]
+    ],
+    "scheme": "vsecure-hrms",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

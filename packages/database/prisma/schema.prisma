@@ -1,0 +1,667 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  HR_ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  ON_NOTICE
+  INACTIVE
+  TERMINATED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  HALF_DAY
+  ABSENT
+  ON_LEAVE
+  FIELD_DUTY
+}
+
+enum AttendanceType {
+  OFFICE
+  FIELD_DUTY
+  CLIENT_SITE
+  APPROVED_OFFSITE
+}
+
+enum AttendanceReviewStatus {
+  AUTO_VERIFIED
+  PENDING_REVIEW
+  FLAGGED_SUSPICIOUS
+  REJECTED
+}
+
+enum CorrectionType {
+  MISSED_CHECK_IN
+  MISSED_CHECK_OUT
+  GPS_FAILURE
+  INCORRECT_HOURS
+  OFFSITE_EXEMPTION
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  EARNED
+  UNPAID_LOP
+  COMP_OFF
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum DocumentType {
+  PROFILE_PHOTO
+  AADHAAR_CARD
+  PAN_CARD
+  EDUCATION_CERTIFICATE
+  OFFER_LETTER
+  EXPERIENCE_LETTER
+  OTHER
+}
+
+enum DocumentVerificationStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+enum PayrollStatus {
+  DRAFT
+  PENDING_REVIEW
+  PENDING_APPROVAL
+  APPROVED
+  FINALIZED
+  PAID
+  REOPENED
+}
+
+enum PaymentStatus {
+  NOT_PAID
+  PROCESSING
+  PAID
+  PARTIALLY_PAID
+  FAILED
+}
+
+model Organization {
+  id              String           @id @default(cuid())
+  name            String           @default("VSecure Technologies")
+  slug            String           @unique @default("vsecure")
+  superAdminName  String           @default("Vishnu")
+  currency        String           @default("INR")
+  timezone        String           @default("Asia/Kolkata")
+  locations       OfficeLocation[]
+  clientSites     ClientSite[]
+  attendancePolicy AttendancePolicy?
+  leaveTypes      LeaveTypeConfig[]
+  leavePolicy     LeavePolicyConfig?
+  publicHolidays  PublicHoliday[]
+  departments     Department[]
+  designations    Designation[]
+  employees       Employee[]
+  payrollCycles   PayrollCycle[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model OfficeLocation {
+  id              String          @id @default(cuid())
+  organizationId  String?
+  organization    Organization?   @relation(fields: [organizationId], references: [id])
+  name            String          // e.g., "VSecure Technologies HQ"
+  address         String
+  latitude        Float           // e.g., 12.9352
+  longitude       Float           // e.g., 77.6946
+  radiusMeters    Int             @default(100)
+  isActive        Boolean         @default(true)
+  employees       Employee[]
+  attendance      AttendanceLog[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([organizationId])
+}
+
+model Department {
+  id              String        @id @default(cuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  name            String        @unique // e.g., "Engineering"
+  code            String        @unique // e.g., "ENG"
+  description     String?
+  designations    Designation[]
+  employees       Employee[]
+  createdAt       DateTime      @default(now())
+
+  @@index([organizationId])
+}
+
+model Designation {
+  id              String        @id @default(cuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  departmentId    String
+  department      Department    @relation(fields: [departmentId], references: [id])
+  title           String        // e.g., "Principal Architect"
+  code            String?       // e.g., "PA-01"
+  employees       Employee[]
+  createdAt       DateTime      @default(now())
+
+  @@unique([departmentId, title])
+  @@index([organizationId])
+}
+
+model Employee {
+  id                   String           @id @default(cuid())
+  organizationId       String?
+  organization         Organization?    @relation(fields: [organizationId], references: [id])
+  employeeCode         String           @unique // e.g., "VS-001"
+  fullName             String           // e.g., "Vishnu"
+  email                String           @unique
+  phone                String           @unique // e.g., "+91 98765 43210"
+  passwordHash         String
+  role                 Role             @default(EMPLOYEE)
+  status               EmploymentStatus @default(ACTIVE)
+  designation          String
+  designationRefId     String?
+  designationRef       Designation?     @relation(fields: [designationRefId], references: [id])
+  joiningDate          DateTime
+  avatarUrl            String?
+
+  // Personal & Identity Information (Step 1)
+  dateOfBirth          DateTime?
+  gender               String?          // Male, Female, Other
+  bloodGroup           String?          // O+, A+, B+, AB+, etc.
+  emergencyContactName String?
+  emergencyContactPhone String?
+  address              String?
+  pan                  String?          // Permanent Account Number
+  aadhaarNumber        String?          // 12-digit UIDAI
+
+  // Salary & Bank Details in INR (Step 3)
+  basicSalaryINR       Decimal          @db.Decimal(12, 2)
+  hraINR               Decimal          @db.Decimal(12, 2)
+  allowancesINR        Decimal          @db.Decimal(12, 2)
+  pfDeductionINR       Decimal          @db.Decimal(12, 2) @default(0)
+  profTaxINR           Decimal          @db.Decimal(12, 2) @default(200)
+  pfApplicable         Boolean          @default(true)
+  esiApplicable        Boolean          @default(false)
+  bankName             String?
+  bankAccountNumber    String?
+  bankIFSC             String?
+
+  // Reporting Hierarchy
+  reportingManagerId   String?
+  reportingManager     Employee?        @relation("ManagerSubordinates", fields: [reportingManagerId], references: [id])
+  subordinates         Employee[]       @relation("ManagerSubordinates")
+
+  // Android Device Binding & Anti-Spoofing (Hardware Locked)
+  boundDeviceId        String?
+  deviceModel          String?          // e.g., "Google Pixel 9 Pro"
+  deviceBoundAt        DateTime?
+  lastLoginAt          DateTime?
+  isActivated          Boolean          @default(true)
+  pinHash              String?          // 4-digit fallback PIN for quick biometric unlock
+
+  departmentId         String
+  department           Department       @relation(fields: [departmentId], references: [id])
+  officeLocationId     String
+  officeLocation       OfficeLocation   @relation(fields: [officeLocationId], references: [id])
+  
+  // Relations
+  attendanceLogs       AttendanceLog[]
+  fieldVisits          FieldVisit[]
+  attendanceCorrections AttendanceCorrection[]
+  leaveRequests        LeaveRequest[]
+  leaveBalances        LeaveBalance[]
+  leaveTransactions    LeaveTransaction[]
+  payrollRecords       PayrollRecord[]
+  documents            EmployeeDocument[]
+  deviceChangeRequests DeviceChangeRequest[]
+  loginSessions        LoginSession[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([departmentId])
+  @@index([officeLocationId])
+  @@index([status, role])
+  @@index([reportingManagerId])
+}
+
+model EmployeeDocument {
+  id                 String                     @id @default(cuid())
+  employeeId         String
+  employee           Employee                   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  documentType       DocumentType
+  documentName       String                     // e.g., "Aadhaar Card - Front & Back.pdf"
+  fileUrl            String
+  fileSize           Int                        // in bytes
+  mimeType           String
+  verificationStatus DocumentVerificationStatus @default(PENDING_VERIFICATION)
+  verifiedBy         String?                    // Name/Code of verifying HR or Super Admin
+  verifiedAt         DateTime?
+  uploadedAt         DateTime                   @default(now())
+
+  @@index([employeeId, documentType])
+}
+
+model DeviceChangeRequest {
+  id              String         @id @default(cuid())
+  employeeId      String
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  oldDeviceId     String?
+  newDeviceId     String
+  newDeviceModel  String
+  reason          String
+  status          ApprovalStatus @default(PENDING)
+  actionedBy      String?        // Admin Vishnu or HR Admin name
+  actionedAt      DateTime?
+  requestedAt     DateTime       @default(now())
+
+  @@index([employeeId, status])
+}
+
+model LoginSession {
+  id           String    @id @default(cuid())
+  employeeId   String
+  employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  sessionToken String    @unique
+  deviceId     String?
+  deviceName   String?
+  ipAddress    String?
+  userAgent    String?
+  isBiometric  Boolean   @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+  lastActiveAt DateTime  @default(now())
+
+  @@index([employeeId, expiresAt])
+}
+
+model LeaveBalance {
+  id             String    @id @default(cuid())
+  employeeId     String
+  employee       Employee  @relation(fields: [employeeId], references: [id])
+  year           Int       // e.g., 2026
+  leaveType      LeaveType
+  openingBalance Float     @default(0)
+  allocated      Float     // Annual entitlement quota
+  accrued        Float     @default(0)
+  carriedForward Float     @default(0)
+  used           Float     @default(0)
+  pending        Float     @default(0)
+  remaining      Float     // available balance
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([employeeId, year, leaveType])
+  @@index([employeeId, year])
+}
+
+model AttendanceLog {
+  id                     String                 @id @default(cuid())
+  employeeId             String
+  employee               Employee               @relation(fields: [employeeId], references: [id])
+  attendanceDate         DateTime               @db.Date
+  checkInTime            DateTime
+  checkOutTime           DateTime?
+  // GPS Coordinates from Expo Android App
+  checkInLat             Float
+  checkInLng             Float
+  checkOutLat            Float?
+  checkOutLng            Float?
+  gpsAccuracyMeters      Float
+  distanceFromHQ         Int                    // Calculated via Haversine formula in meters
+  isWithinGeofence       Boolean                @default(true)
+  isMockLocation         Boolean                @default(false)
+  status                 AttendanceStatus       @default(PRESENT)
+  attendanceType         AttendanceType         @default(OFFICE)
+  totalDurationMinutes   Int?                   // Working duration in minutes
+  workingHoursDisplay    String?                // e.g. "8h 45m"
+  selfieUrl              String?                // Optional selfie photograph URL
+  reviewStatus           AttendanceReviewStatus @default(AUTO_VERIFIED)
+  rejectionReason        String?                // Explanation if rejected or flagged
+  geofenceSnapshotRadius Int                    @default(100) // Snapshot of allowable radius at punch time
+  officeLocationId       String
+  officeLocation         OfficeLocation         @relation(fields: [officeLocationId], references: [id])
+  clientSiteId           String?
+  clientSite             ClientSite?            @relation(fields: [clientSiteId], references: [id])
+  fieldVisits            FieldVisit[]
+  corrections            AttendanceCorrection[]
+  remarks                String?
+  createdAt              DateTime               @default(now())
+
+  @@unique([employeeId, attendanceDate])
+  @@index([attendanceDate, status])
+  @@index([officeLocationId])
+  @@index([clientSiteId])
+  @@index([reviewStatus])
+}
+
+model ClientSite {
+  id              String          @id @default(cuid())
+  organizationId  String?
+  organization    Organization?   @relation(fields: [organizationId], references: [id])
+  name            String          // e.g., "Infosys Development Center"
+  clientName      String          // e.g., "Infosys Limited"
+  workOrderCode   String?         // e.g., "WO-INF-2026-09"
+  address         String
+  latitude        Float
+  longitude       Float
+  radiusMeters    Int             @default(100)
+  contactPerson   String?
+  contactPhone    String?
+  isActive        Boolean         @default(true)
+  attendanceLogs  AttendanceLog[]
+  fieldVisits     FieldVisit[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([organizationId])
+}
+
+model FieldVisit {
+  id                String          @id @default(cuid())
+  employeeId        String
+  employee          Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  attendanceLogId   String?
+  attendanceLog     AttendanceLog?  @relation(fields: [attendanceLogId], references: [id], onDelete: SetNull)
+  clientSiteId      String?
+  clientSite        ClientSite?     @relation(fields: [clientSiteId], references: [id])
+  clientName        String          // Name of client or site
+  workOrderNumber   String?
+  checkInTime       DateTime
+  checkOutTime      DateTime?
+  checkInLat        Float
+  checkInLng        Float
+  checkOutLat       Float?
+  checkOutLng       Float?
+  gpsAccuracyMeters Float?
+  visitNotes        String?
+  sitePhotoUrl      String?
+  status            String          @default("COMPLETED") // IN_PROGRESS, COMPLETED, CANCELLED
+  createdAt         DateTime        @default(now())
+
+  @@index([employeeId, checkInTime])
+  @@index([clientSiteId])
+}
+
+model AttendanceCorrection {
+  id                    String          @id @default(cuid())
+  employeeId            String
+  employee              Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  attendanceLogId       String?
+  attendanceLog         AttendanceLog?  @relation(fields: [attendanceLogId], references: [id], onDelete: SetNull)
+  attendanceDate        DateTime        @db.Date
+  requestType           CorrectionType  @default(MISSED_CHECK_IN)
+  originalCheckInTime   DateTime?
+  originalCheckOutTime  DateTime?
+  requestedCheckInTime  DateTime
+  requestedCheckOutTime DateTime?
+  reason                String
+  supportingDocUrl      String?
+  status                ApprovalStatus  @default(PENDING)
+  actionedBy            String?         // Reviewer name (e.g. "Vishnu (VS-001)")
+  reviewerNotes         String?
+  actionedAt            DateTime?
+  createdAt             DateTime        @default(now())
+
+  @@index([employeeId, status])
+  @@index([attendanceDate])
+}
+
+model AttendancePolicy {
+  id                          String        @id @default(cuid())
+  organizationId              String?       @unique
+  organization                Organization? @relation(fields: [organizationId], references: [id])
+  defaultGeofenceRadiusMeters Int           @default(100)
+  shiftStartTime              String        @default("09:30") // 24-hr format "09:30"
+  shiftEndTime                String        @default("18:30") // 24-hr format "18:30"
+  gracePeriodMinutes          Int           @default(15)      // e.g. up to 09:45 AM
+  minHoursFullDay             Float         @default(8.0)
+  minHoursHalfDay             Float         @default(4.5)
+  requireSelfie               Boolean       @default(false)
+  blockMockLocation           Boolean       @default(true)
+  allowFieldDutyCheckIn       Boolean       @default(true)
+  updatedAt                   DateTime      @updatedAt
+}
+
+model LeaveRequest {
+  id                    String             @id @default(cuid())
+  referenceId           String?            @unique // e.g. "LV-2026-001"
+  employeeId            String
+  employee              Employee           @relation(fields: [employeeId], references: [id])
+  leaveType             LeaveType
+  startDate             DateTime           @db.Date
+  endDate               DateTime           @db.Date
+  isHalfDay             Boolean            @default(false)
+  halfDaySession        String?            // "FIRST_HALF" or "SECOND_HALF"
+  totalDays             Float              // e.g. 0.5, 1.0, 3.0
+  reason                String
+  supportingDocumentUrl String?
+  status                ApprovalStatus     @default(PENDING)
+  approvedBy            String?            // Reviewer name (e.g. "Arjun Mehta (Manager)" or "Vishnu (Super Admin)")
+  rejectionReason       String?
+  actionedAt            DateTime?
+  cancellationReason    String?
+  isCancelled           Boolean            @default(false)
+  transactions          LeaveTransaction[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([employeeId, status])
+  @@index([startDate, endDate])
+}
+
+model LeaveTypeConfig {
+  id                 String        @id @default(cuid())
+  organizationId     String?
+  organization       Organization? @relation(fields: [organizationId], references: [id])
+  code               String        @unique // CL, SL, EL, LOP, COMP
+  name               String        // Casual Leave, Sick Leave, etc.
+  description        String?
+  isPaid             Boolean       @default(true)
+  annualQuota        Float         @default(12.0)
+  monthlyAccrual     Float         @default(1.0)
+  carryForwardMax    Float         @default(0.0)
+  minNoticeDays      Int           @default(1)
+  maxConsecutiveDays Int           @default(7)
+  allowHalfDay       Boolean       @default(true)
+  requiresDocument   Boolean       @default(false)
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model LeavePolicyConfig {
+  id                      String        @id @default(cuid())
+  organizationId          String?       @unique
+  organization            Organization? @relation(fields: [organizationId], references: [id])
+  excludeWeekends         Boolean       @default(true)
+  excludeHolidays         Boolean       @default(true)
+  managerApprovalRequired Boolean       @default(true)
+  hrApprovalRequired      Boolean       @default(false)
+  allowNegativeBalance    Boolean       @default(false)
+  updatedAt               DateTime      @updatedAt
+}
+
+model PublicHoliday {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  name           String        // e.g. "Republic Day", "Independence Day"
+  date           DateTime      @db.Date
+  year           Int           // 2026
+  isOptional     Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+
+  @@unique([date, name])
+  @@index([year])
+}
+
+model LeaveTransaction {
+  id              String        @id @default(cuid())
+  employeeId      String
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+  year            Int
+  leaveType       LeaveType
+  transactionType String        // "ALLOCATION", "DEBIT", "CREDIT", "ADJUSTMENT", "CANCELLATION"
+  days            Float         // e.g. -2.0 or +2.0
+  balanceAfter    Float
+  leaveRequestId  String?
+  leaveRequest    LeaveRequest? @relation(fields: [leaveRequestId], references: [id], onDelete: SetNull)
+  remarks         String
+  actionedBy      String
+  createdAt       DateTime      @default(now())
+
+  @@index([employeeId, year])
+  @@index([leaveRequestId])
+}
+
+model PayrollCycle {
+  id                            String         @id @default(cuid())
+  organizationId                String?
+  organization                  Organization?  @relation(fields: [organizationId], references: [id])
+  month                         Int            // 1 to 12
+  year                          Int            // e.g., 2026
+  status                        PayrollStatus  @default(DRAFT)
+  totalEmployees                Int            @default(0)
+  totalGrossINR                 Decimal        @db.Decimal(14, 2) @default(0)
+  totalDeductionsINR            Decimal        @db.Decimal(14, 2) @default(0)
+  totalEmployerContributionsINR Decimal        @db.Decimal(14, 2) @default(0)
+  totalNetPayableINR            Decimal        @db.Decimal(14, 2) @default(0)
+  lopCalculationBasis           String         @default("CALENDAR_DAYS") // "CALENDAR_DAYS" | "WORKING_DAYS"
+  processedBy                   String?        // Preparer (e.g., Priya - HR Admin)
+  reviewedBy                    String?        // Reviewer
+  approvedBy                    String?        // Approver (e.g., Vishnu - Super Admin)
+  finalizedAt                   DateTime?
+  paidAt                        DateTime?
+  paymentReference              String?        // e.g., "VS-PAY-OCT2026-BATCH01"
+  rejectionReason               String?
+  notes                         String?
+  records                       PayrollRecord[]
+  auditLogs                     PayrollAuditLog[]
+  createdAt                     DateTime       @default(now())
+  updatedAt                     DateTime       @updatedAt
+
+  @@unique([month, year])
+  @@index([status])
+}
+
+model PayrollRecord {
+  id                    String        @id @default(cuid())
+  payrollCycleId        String?
+  payrollCycle          PayrollCycle? @relation(fields: [payrollCycleId], references: [id], onDelete: Cascade)
+  employeeId            String
+  employee              Employee      @relation(fields: [employeeId], references: [id])
+  month                 Int           // 1 to 12
+  year                  Int           // e.g., 2026
+  status                PayrollStatus @default(DRAFT)
+  paymentStatus         PaymentStatus @default(NOT_PAID)
+
+  // Attendance & Leave Integration Inputs
+  calendarDays          Int           @default(31)
+  workingDays           Int           // Scheduled working days (e.g., 22 or 26)
+  presentDays           Float         @default(0)
+  lateArrivalDays       Int           @default(0)
+  halfDays              Float         @default(0)
+  paidLeaveDays         Float         @default(0)
+  unpaidAbsenceDays     Float         @default(0)
+  lopDays               Float         @default(0)
+  overtimeHours         Float         @default(0)
+
+  // Salary Snapshot & Earnings Breakdown (INR)
+  basicSalaryINR        Decimal       @db.Decimal(12, 2)
+  hraINR                Decimal       @db.Decimal(12, 2)
+  conveyanceINR         Decimal       @db.Decimal(12, 2) @default(0)
+  specialAllowanceINR   Decimal       @db.Decimal(12, 2) @default(0)
+  overtimePayINR        Decimal       @db.Decimal(12, 2) @default(0)
+  incentivesINR         Decimal       @db.Decimal(12, 2) @default(0)
+  bonusINR              Decimal       @db.Decimal(12, 2) @default(0)
+  grossEarningsINR      Decimal       @db.Decimal(12, 2)
+
+  // Deductions Breakdown (INR)
+  pfEmployeeINR         Decimal       @db.Decimal(12, 2) @default(0)
+  esiEmployeeINR        Decimal       @db.Decimal(12, 2) @default(0)
+  profTaxINR            Decimal       @db.Decimal(12, 2) @default(200)
+  lopDeductionINR       Decimal       @db.Decimal(12, 2) @default(0)
+  otherDeductionsINR    Decimal       @db.Decimal(12, 2) @default(0)
+  totalDeductions       Decimal       @db.Decimal(12, 2)
+
+  // Employer Statutory Contributions (INR)
+  pfEmployerINR         Decimal       @db.Decimal(12, 2) @default(0)
+  esiEmployerINR        Decimal       @db.Decimal(12, 2) @default(0)
+  totalEmployerCostINR  Decimal       @db.Decimal(12, 2) @default(0)
+
+  // Net Payable (Gross - Total Deductions)
+  netPayableINR         Decimal       @db.Decimal(12, 2)
+
+  // Payment Tracking & Reconciliation
+  isPaid                Boolean       @default(false)
+  paidAt                DateTime?
+  paymentMethod         String?       // "NEFT", "RTGS", "IMPS", "ACH", "CHEQUE"
+  paymentReference      String?       // UTR number e.g. "CMS98471203"
+  paidAmountINR         Decimal?      @db.Decimal(12, 2)
+  paymentRemarks        String?
+
+  // Bank Snapshot at calculation time
+  bankName              String?
+  bankAccountNumber     String?
+  bankIFSC              String?
+
+  // Payslip Document & Workflow
+  payslipPdfUrl         String?
+  payslipNumber         String?       // e.g. "VS-PAY-202610-001"
+  processedBy           String?
+  approvedBy            String?
+  rejectionReason       String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  auditLogs             PayrollAuditLog[]
+
+  @@unique([employeeId, month, year])
+  @@index([month, year])
+  @@index([payrollCycleId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model PayrollAuditLog {
+  id              String         @id @default(cuid())
+  payrollRecordId String?
+  payrollRecord   PayrollRecord? @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+  payrollCycleId  String?
+  payrollCycle    PayrollCycle?  @relation(fields: [payrollCycleId], references: [id], onDelete: Cascade)
+  action          String         // "CALCULATE", "SUBMIT_APPROVAL", "APPROVE", "REJECT", "FINALIZE", "RECORD_PAYMENT", "REOPEN"
+  previousStatus  String?
+  newStatus       String?
+  actorId         String
+  actorName       String
+  remarks         String?
+  createdAt       DateTime       @default(now())
+
+  @@index([payrollRecordId])
+  @@index([payrollCycleId])
+}

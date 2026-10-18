@@ -1,0 +1,18 @@
+{
+  "name": "@vsecure/shared",
+  "version": "1.0.0",
+  "description": "Shared Regional Engine, Zod Schemas, Formatters and Geofence Math for VSecure HRMS",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/phase3-attendance.test.ts test/phase4-leave.test.ts test/phase5-payroll.test.ts test/phase6-production.test.ts"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

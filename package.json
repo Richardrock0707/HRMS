@@ -1,0 +1,43 @@
+{
+  "name": "vsecure-hrms-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VSecure Technologies HRMS - Monorepo for Web Portal and Android Mobile App",
+  "author": "VSecure Technologies",
+  "packageManager": "pnpm@10.5.2",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:generate": "turbo db:generate",
+    "db:push": "turbo db:push",
+    "db:seed": "turbo db:seed",
+    "backup:db": "powershell -ExecutionPolicy Bypass -File ./scripts/backup-db.ps1",
+    "restore:test": "powershell -ExecutionPolicy Bypass -File ./scripts/test-restore.ps1",
+    "mobile:build:apk": "eas build -p android --profile preview-apk",
+    "mobile:build:prod": "eas build -p android --profile production",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.11.3",
+    "typescript": "^5.8.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ],
+    "overrides": {
+      "@types/react": "^19.0.10",
+      "@types/react-dom": "^19.0.4"
+    }
+  }
+}

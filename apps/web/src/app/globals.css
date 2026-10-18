@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+
+  /* VSecure HRMS Pure White Theme Surface Tokens */
+  --color-canvas-primary: #ffffff;
+  --color-canvas-subtle: #f8fafc;
+  --color-canvas-muted: #f1f5f9;
+  --color-border-hairline: #e2e8f0;
+
+  /* High-Contrast Typography Tokens */
+  --color-ink-primary: #0f172a;
+  --color-ink-secondary: #334155;
+  --color-ink-muted: #64748b;
+
+  /* VSecure Royal Blue Accent */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+
+  /* Semantic HR Status Colors */
+  --color-status-present: #16a34a;
+  --color-status-present-bg: #f0fdf4;
+  --color-status-late: #d97706;
+  --color-status-late-bg: #fffbeb;
+  --color-status-absent: #dc2626;
+  --color-status-absent-bg: #fef2f2;
+}
+
+:root {
+  color-scheme: light;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html, body {
+  min-height: 100%;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

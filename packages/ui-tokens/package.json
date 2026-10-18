@@ -1,0 +1,13 @@
+{
+  "name": "@vsecure/ui-tokens",
+  "version": "1.0.0",
+  "description": "Enterprise Modern White-Theme Design Tokens for VSecure HRMS",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

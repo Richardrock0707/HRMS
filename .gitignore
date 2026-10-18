@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Turbo
+.turbo/
+
+# Next.js
+.next/
+out/
+
+# Expo / React Native
+.expo/
+android/
+ios/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Prisma
+packages/database/src/generated/
+
+# Build artifacts
+dist/
+build/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Backups
+backups/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
