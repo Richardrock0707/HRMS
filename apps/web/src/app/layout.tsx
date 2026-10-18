@@ -30,11 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable} style={{ colorScheme: "light" }}>
+    <html lang="en" className={inter.variable} style={{ colorScheme: "light" }} suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light" />
       </head>
-      <body className="bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 min-h-screen">
+      <body
+        className="bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 min-h-screen"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
