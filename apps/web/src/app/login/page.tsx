@@ -54,19 +54,19 @@ export default function LoginPage(): React.ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
       {/* Container */}
-      <div className="w-full max-w-5xl bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
+      <div className="w-full max-w-5xl glass-main-board overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px] shadow-2xl">
         {/* Left Side: Brand Panel */}
-        <div className="lg:col-span-5 bg-linear-to-br from-slate-900 via-slate-800 to-blue-950 p-8 sm:p-10 flex flex-col justify-between text-white relative overflow-hidden">
+        <div className="lg:col-span-5 bg-[#141822]/95 backdrop-blur-2xl p-8 sm:p-10 flex flex-col justify-between text-white relative overflow-hidden border-r border-white/10">
           {/* Subtle Grid / Radial Effect */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.2),transparent_50%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.15),transparent_50%)] pointer-events-none" />
 
           {/* Brand Header */}
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
-                <ShieldCheck className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-2xl bg-slate-900 border border-white/20 flex items-center justify-center text-white shadow-md">
+                <ShieldCheck className="w-6 h-6 text-blue-400" />
               </div>
               <div>
                 <div className="text-xl font-extrabold tracking-tight">VSecure</div>
@@ -77,9 +77,9 @@ export default function LoginPage(): React.ReactElement {
             </div>
 
             <div className="mt-8 space-y-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white border border-white/20 shadow-xs">
                 <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                Phase 2 Security Perimeter
+                Phase 6 Security Perimeter
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight text-white">
                 Enterprise Workforce Core & Biometric Security
@@ -92,7 +92,7 @@ export default function LoginPage(): React.ReactElement {
           </div>
 
           {/* Security Features List */}
-          <div className="relative z-10 space-y-3 my-8 pt-6 border-t border-slate-700/60">
+          <div className="relative z-10 space-y-3 my-8 pt-6 border-t border-white/10">
             <div className="flex items-center gap-2.5 text-xs text-slate-200">
               <Smartphone className="w-4 h-4 text-blue-400 shrink-0" />
               <span>Android Hardware Device Binding (Zero Buddy-Punching)</span>
@@ -108,14 +108,14 @@ export default function LoginPage(): React.ReactElement {
           </div>
 
           {/* Left Footer: IST Timestamp */}
-          <div className="relative z-10 pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 font-mono">
+          <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 font-mono">
             <span>{VSECURE_CONFIG.timezone}</span>
             <span>₹ {VSECURE_CONFIG.currency}</span>
           </div>
         </div>
 
         {/* Right Side: Sign-In Form & Demo Credentials */}
-        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white">
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white/60 backdrop-blur-xl">
           <div>
             <div className="flex items-center justify-between">
               <div>

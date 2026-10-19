@@ -71,12 +71,12 @@ export function GeofenceMapCard(): React.ReactElement {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+    <div className="glass-card p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/60">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <MapPin className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
+              <MapPin className="w-4 h-4 text-blue-400" />
             </div>
             <h2 className="text-base font-bold text-slate-900 tracking-tight">
               Office Geofence & GPS Anti-Spoof Engine
@@ -88,7 +88,7 @@ export function GeofenceMapCard(): React.ReactElement {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50/80 text-emerald-800 border border-emerald-200/80 flex items-center gap-1.5 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             HQ Geofence Active (100m)
           </span>
@@ -98,13 +98,13 @@ export function GeofenceMapCard(): React.ReactElement {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-5">
         {/* Left: Office HQ Details & Visual Radar */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+          <div className="p-4 rounded-2xl bg-white/60 backdrop-blur-md border border-white/80 shadow-2xs">
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-xs font-bold text-slate-900">{office.name}</span>
                 <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{office.address}</p>
               </div>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900/10 text-slate-800">
                 HQ
               </span>
             </div>

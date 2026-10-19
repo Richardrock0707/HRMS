@@ -111,8 +111,8 @@ export function AttendancePreviewTable(): React.ReactElement {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-      <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="glass-card p-6 shadow-sm overflow-hidden">
+      <div className="pb-5 border-b border-white/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-base font-bold text-slate-900 tracking-tight">
             Today&apos;s Live Attendance Feed
@@ -123,16 +123,16 @@ export function AttendancePreviewTable(): React.ReactElement {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-500">
-            Date: <span className="font-mono font-semibold text-slate-800">{formatDateDDMMYYYY()}</span>
+          <span className="text-xs font-medium text-slate-600 glass-pill px-3 py-1 rounded-full">
+            Date: <span className="font-mono font-bold text-slate-900">{formatDateDDMMYYYY()}</span>
           </span>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mt-2">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-white/60 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <th className="py-3 px-4">Employee</th>
               <th className="py-3 px-4">Department</th>
               <th className="py-3 px-4">Check-In (IST)</th>
@@ -141,7 +141,7 @@ export function AttendancePreviewTable(): React.ReactElement {
               <th className="py-3 px-4">Device Binding</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+          <tbody className="divide-y divide-white/40 font-medium text-slate-700">
             {mockRecords.map((record) => (
               <tr key={record.id} className="hover:bg-slate-50/70 transition-colors">
                 <td className="py-3.5 px-4">

@@ -35,7 +35,7 @@ export default function RootLayout({
         <meta name="color-scheme" content="light" />
       </head>
       <body
-        className="bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 min-h-screen"
+        className="spatial-wallpaper min-h-screen text-slate-900 antialiased selection:bg-blue-200 selection:text-blue-900"
         suppressHydrationWarning
       >
         {children}
