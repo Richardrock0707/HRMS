@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import crypto from "crypto";
 import { Role } from "@vsecure/shared";
 
@@ -19,7 +20,20 @@ export interface UserSession {
 }
 
 const COOKIE_NAME = "vsecure_session";
-const SESSION_SECRET = process.env.SESSION_SECRET || "vsecure-enterprise-hrms-session-secret-key-32chars!";
+const DEV_ONLY_SESSION_SECRET = "dev-only-insecure-session-secret-do-not-use-in-production";
+
+function resolveSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (secret && secret.length >= 32) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SESSION_SECRET must be set to a random value of at least 32 characters in production."
+    );
+  }
+  return DEV_ONLY_SESSION_SECRET;
+}
+
+const SESSION_SECRET = resolveSessionSecret();
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
@@ -100,3 +114,22 @@ export async function deleteSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
 }
+
+/**
+ * Returns the current session or redirects to /login.
+ * Call this BEFORE any try/catch block, because redirect() works by throwing.
+ */
+export async function requireSession(): Promise<UserSession> {
+  const session = await getSession();
+  if (!session) {
+    redirect("/login");
+  }
+  return session;
+}
+
+/**
+ * Demo accounts and demo passwords are allowed only outside production,
+ * unless ALLOW_DEMO_LOGIN=true is set explicitly (never do this for a live system).
+ */
+export const ALLOW_DEMO_LOGIN =
+  process.env.NODE_ENV !== "production" || process.env.ALLOW_DEMO_LOGIN === "true";

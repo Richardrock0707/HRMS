@@ -25,7 +25,7 @@ import {
   DEFAULT_LEAVE_TYPES,
   DEFAULT_2026_HOLIDAYS,
 } from "@vsecure/shared";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import {
   LIVE_LEAVE_POLICY,
   LIVE_LEAVE_TYPES,
@@ -44,7 +44,7 @@ import { INITIAL_ATTENDANCE_RECORDS } from "@/lib/attendanceData";
  * Fetch KPI Summary Stats for Leave Dashboard
  */
 export async function getLeaveDashboardStatsAction(): Promise<LeaveDashboardStats> {
-  const session = await getSession();
+  const session = await requireSession();
   const todayStr = formatDateDDMMYYYY(new Date());
 
   try {
@@ -152,9 +152,9 @@ export async function getLeaveDashboardStatsAction(): Promise<LeaveDashboardStat
  * Fetch Leave Balances (RBAC scoped)
  */
 export async function getLeaveBalancesAction(targetEmployeeId?: string): Promise<LeaveBalanceItem[]> {
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
-  const currentUserRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentUserId = session.id;
+  const currentUserRole = session.role;
   const currentUserDeptId = session?.departmentId;
 
   // Resolve target employee
@@ -230,9 +230,9 @@ export async function getLeaveRequestsAction(params?: {
   search?: string;
   tab?: "my" | "approvals" | "all" | "ledger";
 }): Promise<LeaveRecordItem[]> {
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
-  const currentUserRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentUserId = session.id;
+  const currentUserRole = session.role;
   const currentUserDeptId = session?.departmentId;
   const currentUserCode = session?.employeeCode || "VS-001";
 
@@ -380,8 +380,8 @@ export async function applyLeaveAction(input: LeaveApplicationInput): Promise<{
     throw new Error(parsed.error.errors[0]?.message || "Invalid leave application data.");
   }
 
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
+  const session = await requireSession();
+  const currentUserId = session.id;
   const currentUserCode = session?.employeeCode || "VS-001";
   const currentUserName = session?.fullName || "Vishnu";
   const currentUserDeptId = session?.departmentId || "dept_eng";
@@ -531,9 +531,9 @@ export async function reviewLeaveRequestAction(
   decision: "APPROVE" | "REJECT",
   remarks?: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
-  const currentUserRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentUserId = session.id;
+  const currentUserRole = session.role;
   const currentUserName = session?.fullName || "Vishnu";
   const currentUserDeptId = session?.departmentId;
 
@@ -722,9 +722,9 @@ export async function cancelLeaveRequestAction(
     throw new Error("A cancellation reason is required.");
   }
 
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
-  const currentUserRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentUserId = session.id;
+  const currentUserRole = session.role;
   const currentUserName = session?.fullName || "Vishnu";
 
   const request = LIVE_LEAVE_REQUESTS.find(
@@ -808,9 +808,9 @@ export async function adjustLeaveBalanceAction(
   adjustmentDays: number,
   reason: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
-  const currentUserRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentUserId = session.id;
+  const currentUserRole = session.role;
   const currentUserName = session?.fullName || "Vishnu";
 
   const userContext = {
@@ -876,9 +876,9 @@ export async function adjustLeaveBalanceAction(
  * Fetch Leave Transactions Audit Ledger
  */
 export async function getLeaveTransactionsAction(targetEmployeeId?: string): Promise<LeaveTransactionItem[]> {
-  const session = await getSession();
-  const currentUserId = session?.id || "emp_vsecure_001";
-  const currentUserRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentUserId = session.id;
+  const currentUserRole = session.role;
 
   if (currentUserRole === "EMPLOYEE" || !targetEmployeeId) {
     return LIVE_LEAVE_TRANSACTIONS.filter((t) => t.employeeId === currentUserId);

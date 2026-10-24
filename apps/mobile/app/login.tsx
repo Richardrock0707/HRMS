@@ -14,9 +14,9 @@ import { VSECURE_CONFIG } from "@vsecure/shared";
 
 export default function MobileLoginScreen() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState("VS-001");
-  const [password, setPassword] = useState("VSecure@2026");
-  const [pin, setPin] = useState("1234");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(true);
 

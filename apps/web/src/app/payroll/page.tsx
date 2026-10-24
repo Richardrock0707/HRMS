@@ -7,7 +7,7 @@ import {
   getPayrollCycleAction,
   getPayrollRecordsAction,
 } from "@/actions/payrollActions";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 
 export const metadata = {
   title: "Automated Payroll & Salary Management | VSecure HRMS",
@@ -16,9 +16,9 @@ export const metadata = {
 };
 
 export default async function PayrollPage() {
-  const session = await getSession();
-  const userRole = session?.role || "SUPER_ADMIN";
-  const userId = session?.id || "emp_vsecure_001";
+  const session = await requireSession();
+  const userRole = session.role;
+  const userId = session.id;
   const userCode = session?.employeeCode || "VS-001";
   const userName = session?.fullName || "Vishnu";
 

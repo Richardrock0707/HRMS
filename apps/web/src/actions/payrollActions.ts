@@ -22,7 +22,7 @@ import {
   canRecordSalaryPayment,
   UserContext,
 } from "@vsecure/shared";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import {
   LIVE_PAYROLL_CYCLES,
   LIVE_PAYROLL_RECORDS,
@@ -36,9 +36,9 @@ import { INITIAL_STAFF_DIRECTORY } from "@/lib/directoryData";
 
 function toUserContext(session: any): UserContext {
   return {
-    id: session?.id || "emp_vsecure_001",
-    email: session?.email || "vishnu@vsecuretechnologies.com",
-    role: session?.role || "SUPER_ADMIN",
+    id: session.id,
+    email: session.email,
+    role: session.role,
     departmentId: session?.departmentId,
     status: "ACTIVE",
   };
@@ -51,7 +51,7 @@ export async function getPayrollDashboardStatsAction(
   month: number = 10,
   year: number = 2026
 ): Promise<PayrollDashboardStats> {
-  const session = await getSession();
+  const session = await requireSession();
 
   try {
     const cycle = await prisma.payrollCycle.findUnique({
@@ -169,7 +169,7 @@ export async function getPayrollRecordsAction(
   departmentId?: string,
   statusFilter?: string
 ): Promise<{ success: boolean; data: PayrollRecordItem[]; error?: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   try {
@@ -288,7 +288,7 @@ export async function calculateMonthlyPayrollAction(
   year: number,
   lopBasis: LopCalculationBasis = "CALENDAR_DAYS"
 ): Promise<{ success: boolean; message: string; cycleId?: string; error?: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canManagePayroll(user)) {
@@ -522,7 +522,7 @@ export async function submitPayrollForApprovalAction(
   cycleId: string,
   remarks?: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canManagePayroll(user)) {
@@ -566,7 +566,7 @@ export async function approvePayrollCycleAction(
   decision: "APPROVE" | "REJECT",
   reason?: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canApprovePayroll(user)) {
@@ -623,7 +623,7 @@ export async function approvePayrollCycleAction(
 export async function finalizePayrollCycleAction(
   cycleId: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canFinalizePayroll(user)) {
@@ -673,7 +673,7 @@ export async function reopenPayrollCycleAction(
   cycleId: string,
   reason: string
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canReopenPayroll(user)) {
@@ -735,7 +735,7 @@ export async function recordSalaryPaymentAction(
     paymentRemarks?: string;
   }
 ): Promise<{ success: boolean; message: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canRecordSalaryPayment(user)) {
@@ -786,7 +786,7 @@ export async function getBankTransferExportAction(
   csvContent: string;
   error?: string;
 }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   if (!canExportBankTransfer(user)) {
@@ -838,7 +838,7 @@ export async function getBankTransferExportAction(
 export async function getPayslipDetailAction(
   recordId: string
 ): Promise<{ success: boolean; data?: PayrollRecordItem; error?: string }> {
-  const session = await getSession();
+  const session = await requireSession();
   const user = toUserContext(session);
 
   const rec = LIVE_PAYROLL_RECORDS.find((r) => r.id === recordId);

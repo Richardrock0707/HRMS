@@ -7,7 +7,7 @@ import {
   getAttendanceRecordsAction,
   getAttendancePolicyAction,
 } from "@/actions/attendanceActions";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 
 export const metadata = {
   title: "Live GPS Attendance Hub | VSecure HRMS",
@@ -16,8 +16,8 @@ export const metadata = {
 };
 
 export default async function AttendancePage() {
-  const session = await getSession();
-  const userRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const userRole = session.role;
 
   const [stats, records, policy] = await Promise.all([
     getAttendanceDashboardStatsAction(),

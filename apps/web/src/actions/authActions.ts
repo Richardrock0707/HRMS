@@ -1,9 +1,24 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prisma } from "@vsecure/database";
+import { prisma, verifyPassword, hashPassword, isPasswordHashed } from "@vsecure/database";
 import { Role, formatDateTimeIST, DEMO_CREDENTIALS } from "@vsecure/shared";
-import { setSessionCookie, deleteSessionCookie, getSession, UserSession } from "@/lib/auth";
+import {
+  setSessionCookie,
+  deleteSessionCookie,
+  getSession,
+  UserSession,
+  ALLOW_DEMO_LOGIN,
+} from "@/lib/auth";
+import { timingSafeEqual } from "crypto";
+
+const DEMO_PASSWORD = "VSecure@2026";
+
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ba.length === bb.length && timingSafeEqual(ba, bb);
+}
 
 export async function loginAction(
   prevState: { error?: string; success?: boolean } | null,
@@ -20,6 +35,7 @@ export async function loginAction(
 
   // Look up employee by Email OR by Employee Code
   let employee = null;
+  let dbUnavailable = false;
   try {
     employee = await prisma.employee.findFirst({
       where: {
@@ -33,53 +49,68 @@ export async function loginAction(
       },
     });
   } catch (dbErr) {
+    dbUnavailable = true;
     console.error("Database connection error in loginAction:", dbErr);
-    // In local dev without live PG, check fallback demo user
   }
 
-  // Fallback demo user if database is offline or not yet seeded
+  // Demo-only fallback: works ONLY outside production (or if ALLOW_DEMO_LOGIN=true),
+  // only when the database has no such user, and only with the exact demo password.
   if (!employee) {
-    const demo = DEMO_CREDENTIALS.find(
-      (d) =>
-        d.email.toLowerCase() === identifier.toLowerCase() ||
-        d.code.toUpperCase() === identifier.toUpperCase()
-    );
+    if (ALLOW_DEMO_LOGIN) {
+      const demo = DEMO_CREDENTIALS.find(
+        (d) =>
+          d.email.toLowerCase() === identifier.toLowerCase() ||
+          d.code.toUpperCase() === identifier.toUpperCase()
+      );
 
-    if (demo && (password === "VSecure@2026" || password === "password123" || password.length >= 6)) {
-      const session: UserSession = {
-        id: `demo_${demo.code.toLowerCase()}`,
-        employeeCode: demo.code,
-        email: demo.email,
-        fullName: demo.name,
-        role: demo.role,
-        departmentId: demo.role === "HR_ADMIN" ? "dept_hr" : "dept_eng",
-        departmentName: demo.role === "HR_ADMIN" ? "People & HR" : "Engineering & Architecture",
-        designation: demo.title,
-        boundDeviceId: `android_${demo.code.toLowerCase()}_handset`,
-        deviceModel: "Google Pixel 9 Pro",
-        lastLoginIST: formatDateTimeIST(new Date()),
-        issuedAt: Date.now(),
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-      };
+      if (demo && safeEqual(password, DEMO_PASSWORD)) {
+        const session: UserSession = {
+          id: `demo_${demo.code.toLowerCase()}`,
+          employeeCode: demo.code,
+          email: demo.email,
+          fullName: demo.name,
+          role: demo.role,
+          departmentId: demo.role === "HR_ADMIN" ? "dept_hr" : "dept_eng",
+          departmentName: demo.role === "HR_ADMIN" ? "People & HR" : "Engineering & Architecture",
+          designation: demo.title,
+          boundDeviceId: `android_${demo.code.toLowerCase()}_handset`,
+          deviceModel: "Google Pixel 9 Pro",
+          lastLoginIST: formatDateTimeIST(new Date()),
+          issuedAt: Date.now(),
+          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        };
 
-      await setSessionCookie(session);
-      redirect("/");
+        await setSessionCookie(session);
+        redirect("/");
+      }
     }
 
-    return {
-      error: "Invalid credentials. Use 'VS-001' or 'vishnu@vsecuretechnologies.com' with 'VSecure@2026'.",
-    };
+    if (dbUnavailable) {
+      return { error: "Service temporarily unavailable. Please try again shortly." };
+    }
+    // Same message for unknown user and wrong password (no account enumeration)
+    return { error: "Invalid credentials." };
   }
 
   // Check account status
   if (employee.status === "TERMINATED" || employee.status === "INACTIVE") {
-    return { error: "This employee account is inactive. Please contact Administrator Vishnu." };
+    return { error: "This employee account is inactive. Please contact your administrator." };
   }
 
-  // Password verification (allows standard demo password or stored hash)
-  const isDemoPassword = password === "VSecure@2026" || password === "password123";
-  if (!isDemoPassword && employee.passwordHash !== password) {
-    return { error: "Invalid password. Default demo password is 'VSecure@2026'." };
+  // Password verification
+  let passwordOk = false;
+  if (isPasswordHashed(employee.passwordHash)) {
+    passwordOk = verifyPassword(password, employee.passwordHash);
+  } else if (safeEqual(password, employee.passwordHash)) {
+    // Legacy plain-text value: accept once, then upgrade to a scrypt hash
+    passwordOk = true;
+    await prisma.employee.update({
+      where: { id: employee.id },
+      data: { passwordHash: hashPassword(password) },
+    });
+  }
+  if (!passwordOk) {
+    return { error: "Invalid credentials." };
   }
 
   // Hardware Device Binding Check (for Android mobile sign-ins)
@@ -135,6 +166,9 @@ export async function logoutAction() {
 }
 
 export async function switchDemoUserAction(role: Role) {
+  if (!ALLOW_DEMO_LOGIN) {
+    redirect("/login");
+  }
   const demo = DEMO_CREDENTIALS.find((d) => d.role === role) || DEMO_CREDENTIALS[0];
 
   const session: UserSession = {
@@ -197,8 +231,7 @@ export async function submitDeviceChangeRequestAction(formData: FormData) {
   } catch (error) {
     console.error("Error creating device change request:", error);
     return {
-      success: true,
-      message: "Demo Request recorded: Pending approval by Administrator Vishnu.",
+      error: "Could not record the request right now. Please try again or contact your administrator.",
     };
   }
 }

@@ -8,6 +8,7 @@ import {
   DocumentVerificationStatus,
   ApprovalStatus,
 } from "@prisma/client";
+import { hashPassword } from "../src/password";
 
 const prisma = new PrismaClient();
 
@@ -157,9 +158,15 @@ async function main() {
   });
   console.log("✓ Core Designations seeded");
 
-  // Default hashed password for demo: "VSecure@2026"
-  // Simulated SHA-256 / bcrypt hash
-  const defaultPasswordHash = "$2b$12$k8Y1jE.P9uY9uU.X7sV.1eQ2w3e4r5t6y7u8i9o0p1a2s3d4f5g6";
+  // Initial password for seeded users. Set SEED_DEFAULT_PASSWORD in your env.
+  // Outside production a demo fallback is used so local setup still works.
+  const seedPassword =
+    process.env.SEED_DEFAULT_PASSWORD ||
+    (process.env.NODE_ENV === "production" ? undefined : "VSecure@2026");
+  if (!seedPassword) {
+    throw new Error("SEED_DEFAULT_PASSWORD must be set when seeding in production.");
+  }
+  const defaultPasswordHash = hashPassword(seedPassword);
 
   // 5. Seed Super Administrator "Vishnu" (VS-001)
   const superAdmin = await prisma.employee.upsert({

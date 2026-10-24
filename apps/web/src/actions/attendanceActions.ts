@@ -27,7 +27,7 @@ import {
   parseDateDDMMYYYY,
   DEFAULT_OFFICE_COORDINATES,
 } from "@vsecure/shared";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import {
   INITIAL_ATTENDANCE_RECORDS,
   INITIAL_CORRECTION_REQUESTS,
@@ -44,8 +44,8 @@ import { LIVE_LEAVE_REQUESTS } from "@/lib/leaveData";
  * Fetch KPI Summary Stats for Attendance Dashboard
  */
 export async function getAttendanceDashboardStatsAction(): Promise<AttendanceDashboardStats> {
-  const session = await getSession();
-  const currentRole: Role = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentRole: Role = session.role;
   const currentDeptId = session?.departmentId;
 
   try {
@@ -153,9 +153,9 @@ export async function getAttendanceRecordsAction(params?: {
   reviewStatus?: string;
   date?: string; // DD-MM-YYYY
 }): Promise<AttendanceRecordItem[]> {
-  const session = await getSession();
-  const currentRole: Role = session?.role || "SUPER_ADMIN";
-  const currentUserId = session?.id || "emp_vsecure_001";
+  const session = await requireSession();
+  const currentRole: Role = session.role;
+  const currentUserId = session.id;
   const currentDeptId = session?.departmentId;
 
   try {
@@ -276,7 +276,7 @@ export async function getAttendanceRecordsAction(params?: {
  * GPS Attendance Check-In Action (Android & Web)
  */
 export async function checkInAttendanceAction(input: AttendanceCheckInInput) {
-  const session = await getSession();
+  const session = await requireSession();
   const currentRole = session?.role || "EMPLOYEE";
   const currentUserId = session?.id || input.employeeId;
 
@@ -717,8 +717,8 @@ export async function reviewAttendanceCorrectionAction(
   decision: "APPROVED" | "REJECTED",
   reviewerNotes?: string
 ) {
-  const session = await getSession();
-  const currentRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentRole = session.role;
   const reviewerName = session?.fullName ? `${session.fullName} (${session.role})` : "Vishnu (Super Admin)";
 
   if (!hasPermission(currentRole, "ATTENDANCE:CORRECTION_APPROVE")) {
@@ -785,8 +785,8 @@ export async function getAttendancePolicyAction(): Promise<AttendancePolicyInput
 }
 
 export async function updateAttendancePolicyAction(input: AttendancePolicyInput) {
-  const session = await getSession();
-  const currentRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentRole = session.role;
 
   if (!hasPermission(currentRole, "ATTENDANCE:POLICY_MANAGE")) {
     return { error: "Access Denied: Only Administrator Vishnu and HR Admins can configure attendance policies." };

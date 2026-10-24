@@ -12,7 +12,7 @@ import {
   canViewSalary,
   formatDateDDMMYYYY,
 } from "@vsecure/shared";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import { INITIAL_STAFF_DIRECTORY, EmployeeDirectoryItem } from "@/lib/directoryData";
 
 /**
@@ -24,9 +24,9 @@ export async function getEmployeesAction(params?: {
   role?: Role;
   status?: EmploymentStatus;
 }) {
-  const session = await getSession();
-  const currentRole: Role = session?.role || "SUPER_ADMIN";
-  const currentUserId = session?.id || "emp_vsecure_001";
+  const session = await requireSession();
+  const currentRole: Role = session.role;
+  const currentUserId = session.id;
   const currentDeptId = session?.departmentId;
 
   try {
@@ -187,8 +187,8 @@ export async function getNextEmployeeCodeAction(): Promise<string> {
  * Complete 4-Step Onboarding Action
  */
 export async function onboardEmployeeAction(data: EmployeeOnboardingInput) {
-  const session = await getSession();
-  const currentRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentRole = session.role;
 
   if (!hasPermission(currentRole, "EMPLOYEE:CREATE")) {
     return { error: "Access Denied: Only Super Admin and HR Admin can onboard new employees." };
@@ -308,8 +308,8 @@ export async function onboardEmployeeAction(data: EmployeeOnboardingInput) {
  * Reset / Unlink an Android device hardware binding
  */
 export async function resetDeviceBindingAction(employeeId: string) {
-  const session = await getSession();
-  const currentRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentRole = session.role;
 
   if (!hasPermission(currentRole, "DEVICE:RESET")) {
     return { error: "Access Denied: Only Administrator Vishnu and HR Admins can unlink Android devices." };
@@ -343,8 +343,8 @@ export async function resetDeviceBindingAction(employeeId: string) {
  * Update Employment Status (Active, On Notice, Inactive, Terminated)
  */
 export async function updateEmployeeStatusAction(employeeId: string, status: EmploymentStatus) {
-  const session = await getSession();
-  const currentRole = session?.role || "SUPER_ADMIN";
+  const session = await requireSession();
+  const currentRole = session.role;
 
   if (!hasPermission(currentRole, "STATUS:MANAGE")) {
     return { error: "Access Denied: Only Super Admin and HR Admin can modify employment status." };

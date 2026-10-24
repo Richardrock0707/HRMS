@@ -18,9 +18,12 @@ import {
 import { loginAction, switchDemoUserAction } from "@/actions/authActions";
 import { VSECURE_CONFIG, Role, DEMO_CREDENTIALS } from "@vsecure/shared";
 
+// Demo helpers are shown only when NEXT_PUBLIC_SHOW_DEMO_LOGIN="true" (never set this in production)
+const SHOW_DEMO = process.env.NEXT_PUBLIC_SHOW_DEMO_LOGIN === "true";
+
 export default function LoginPage(): React.ReactElement {
-  const [identifier, setIdentifier] = useState("VS-001");
-  const [password, setPassword] = useState("VSecure@2026");
+  const [identifier, setIdentifier] = useState(SHOW_DEMO ? "VS-001" : "");
+  const [password, setPassword] = useState(SHOW_DEMO ? "VSecure@2026" : "");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -208,7 +211,8 @@ export default function LoginPage(): React.ReactElement {
               </button>
             </form>
 
-            {/* Quick 1-Click Role Switcher Demo Cards */}
+            {/* Quick 1-Click Role Switcher Demo Cards (demo mode only) */}
+            {SHOW_DEMO && (
             <div className="mt-8 pt-6 border-t border-slate-200">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -239,6 +243,7 @@ export default function LoginPage(): React.ReactElement {
                 ))}
               </div>
             </div>
+            )}
           </div>
 
           {/* Bottom Security Footer */}
